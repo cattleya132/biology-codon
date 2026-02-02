@@ -3,41 +3,29 @@ import random
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
-import pytz # 한국 시간 기록용 라이브러리
+import pytz
 
 # ==========================================
 # 👇 [중요] 본인의 구글 엑셀 주소를 꼭 다시 넣어주세요!
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1u09CnLBLV8Ny5v0TDaXC7KBDRRx4tmMrh5o6cHR7vQI/edit?gid=0#gid=0"
 # ==========================================
 
-# 🧬 코돈 데이터 (정답 리스트 업데이트 완료)
-# 사용자는 리스트에 있는 값 중 하나만 입력하면 정답입니다.
+# 🧬 코돈 데이터 (정답 확인용 데이터는 그대로 유지)
 CODON_DICT = {
-    # 1. U 시작
     "UUU": ["페닐알라닌", "F"], "UUC": ["페닐알라닌", "F"],
     "UUA": ["류신", "L"], "UUG": ["류신", "L"],
     "UCU": ["세린", "S"], "UCC": ["세린", "S"], "UCA": ["세린", "S"], "UCG": ["세린", "S"],
     "UAU": ["타이로신", "Y"], "UAC": ["타이로신", "Y"],
-    
-    # 👇 [수정됨] 종결 코돈 정답 목록 강화 (*, 종결, 종결 코돈 등)
     "UAA": ["종결", "종결코돈", "종결 코돈", "*", "STOP"], 
     "UAG": ["종결", "종결코돈", "종결 코돈", "*", "STOP"],
-    
     "UGU": ["시스테인", "C"], "UGC": ["시스테인", "C"],
-    
-    # 👇 [수정됨] 종결 코돈
     "UGA": ["종결", "종결코돈", "종결 코돈", "*", "STOP"], 
-    
     "UGG": ["트립토판", "W"],
-
-    # 2. C 시작
     "CUU": ["류신", "L"], "CUC": ["류신", "L"], "CUA": ["류신", "L"], "CUG": ["류신", "L"],
     "CCU": ["프롤린", "P"], "CCC": ["프롤린", "P"], "CCA": ["프롤린", "P"], "CCG": ["프롤린", "P"],
     "CAU": ["히스티딘", "H"], "CAC": ["히스티딘", "H"],
     "CAA": ["글루타민", "Q"], "CAG": ["글루타민", "Q"],
     "CGU": ["아르지닌", "R"], "CGC": ["아르지닌", "R"], "CGA": ["아르지닌", "R"], "CGG": ["아르지닌", "R"],
-
-    # 3. A 시작
     "AUU": ["아이소류신", "I"], "AUC": ["아이소류신", "I"], "AUA": ["아이소류신", "I"],
     "AUG": ["메싸이오닌", "M", "시작", "시작코돈"],
     "ACU": ["트레오닌", "T"], "ACC": ["트레오닌", "T"], "ACA": ["트레오닌", "T"], "ACG": ["트레오닌", "T"],
@@ -45,8 +33,6 @@ CODON_DICT = {
     "AAA": ["라이신", "K"], "AAG": ["라이신", "K"],
     "AGU": ["세린", "S"], "AGC": ["세린", "S"],
     "AGA": ["아르지닌", "R"], "AGG": ["아르지닌", "R"],
-
-    # 4. G 시작
     "GUU": ["발린", "V"], "GUC": ["발린", "V"], "GUA": ["발린", "V"], "GUG": ["발린", "V"],
     "GCU": ["알라닌", "A"], "GCC": ["알라닌", "A"], "GCA": ["알라닌", "A"], "GCG": ["알라닌", "A"],
     "GAU": ["아스파르트산", "D"], "GAC": ["아스파르트산", "D"],
@@ -64,22 +50,18 @@ def init_connection():
     creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     return gspread.authorize(creds)
 
-# 📝 [핵심 기능] 엑셀에 기록 남기기 (로그 저장)
+# 엑셀 로그 저장
 def log_to_sheet(codon, user_input, result):
     try:
         client = init_connection()
         sheet = client.open_by_url(SHEET_URL).sheet1
-        
-        # 한국 시간 가져오기
         korea_timezone = pytz.timezone("Asia/Seoul")
         now = datetime.now(korea_timezone).strftime("%Y-%m-%d %H:%M:%S")
-        
-        # 엑셀 맨 끝에 한 줄 추가 [시간, 문제, 입력값, 결과]
         sheet.append_row([now, codon, user_input, result])
     except Exception as e:
-        print(f"로그 저장 실패 (사용자에게는 안 보임): {e}")
+        print(f"로그 저장 실패: {e}")
 
-# 게임 초기화 함수
+# 게임 초기화
 def init_game():
     st.session_state['quiz_queue'] = list(CODON_DICT.keys())
     random.shuffle(st.session_state['quiz_queue'])
@@ -90,7 +72,7 @@ def init_game():
     st.session_state['total_count'] = len(CODON_DICT)
     st.session_state['mode'] = "전체 모드"
 
-# 오답 복습 함수
+# 오답 복습
 def retry_wrong_answers():
     st.session_state['quiz_queue'] = st.session_state['wrong_answers'][:]
     random.shuffle(st.session_state['quiz_queue'])
@@ -102,24 +84,26 @@ def retry_wrong_answers():
     st.session_state['mode'] = "🔥 오답 복습 모드"
 
 def main():
-    # CSS로 관리자 버튼 등 숨기기 (깔끔하게)
+    # CSS: 관리자 버튼 숨김 + 모바일 레이아웃 최적화
     st.markdown("""
         <style>
         [data-testid="stStatusWidget"] {visibility: hidden !important;}
         footer {visibility: hidden !important;}
         header {visibility: hidden !important;}
-        
-        /* 모바일 여백 조정 */
         .block-container {
             padding-top: 2rem;
             padding-bottom: 5rem;
+        }
+        /* 입력창 깜빡임 방지용 스타일 */
+        div[data-testid="stForm"] {
+            border: none;
+            padding: 0;
         }
         </style>
         """, unsafe_allow_html=True)
 
     st.set_page_config(page_title="코돈표 입력 퀴즈", page_icon="🧬")
     
-    # 세션 상태 초기화
     if 'quiz_queue' not in st.session_state:
         init_game()
 
@@ -133,7 +117,7 @@ def main():
         st.progress(progress)
         st.caption(f"남은 문제: {remaining}개 / 총 {total}개")
 
-    # 피드백 표시 (정답/오답 결과)
+    # 피드백 표시
     if st.session_state['feedback']:
         is_correct, msg = st.session_state['feedback']
         if is_correct:
@@ -141,7 +125,7 @@ def main():
         else:
             st.error(msg)
 
-    # 게임 종료 체크 (더 이상 풀 문제가 없을 때)
+    # 게임 종료 체크
     if not st.session_state['quiz_queue'] and st.session_state['current_q'] is None:
         st.divider()
         st.header("🎉 테스트 종료!")
@@ -160,14 +144,16 @@ def main():
                 st.rerun()
         return
 
-    # 새 문제 뽑기 (현재 문제가 없으면 큐에서 하나 꺼냄)
+    # 문제 뽑기
     if st.session_state['current_q'] is None:
         st.session_state['current_q'] = st.session_state['quiz_queue'].pop()
-        st.session_state['feedback'] = None
+        # 🔥 [핵심 수정 1] 새 문제를 뽑을 때 피드백을 초기화하지 않고,
+        # 이전 문제의 정답/오답 결과를 계속 보여주다가 다음 제출 시에 갱신합니다.
+        # 이렇게 하면 화면이 덜 깜빡거립니다.
 
     current_codon = st.session_state['current_q']
     
-    # 문제 화면 출력
+    # 문제 화면
     st.markdown(f"""
     <div style="text-align: center; margin: 30px 0;">
         <span style="font-size: 20px;">이 코돈의 아미노산은?</span><br>
@@ -182,54 +168,51 @@ def main():
 
         if submitted:
             valid_answers = CODON_DICT[current_codon]
-            
-            # 입력값 정리 (좌우 공백 제거, 대문자로 변환)
-            # *나 한글은 upper() 해도 그대로 유지됨
             cleaned_input = user_input.strip().upper()
-            original_input = user_input.strip() # 원본 입력값 (띄어쓰기 정도만 제거)
+            original_input = user_input.strip()
             
             # 정답 확인 로직
             is_correct = False
             for ans in valid_answers:
-                # 1. 대문자 변환 값과 비교 (약자 처리용: t -> T)
                 if cleaned_input == ans:
                     is_correct = True
                     break
-                # 2. 원본 값과 비교 (띄어쓰기 있는 한글 처리용: '종결 코돈' 등)
                 if original_input == ans:
                     is_correct = True
                     break
             
-            # 엑셀에 로그 저장
+            # 엑셀 로그 저장
             log_result = "정답" if is_correct else "오답"
             log_to_sheet(current_codon, user_input, log_result)
 
+            # 결과 업데이트
             if is_correct:
                 st.session_state['score'] += 1
-                display_answer = valid_answers[0] # 대표 정답 보여주기
+                display_answer = valid_answers[0]
                 st.session_state['feedback'] = (True, f"✅ 정답! ({current_codon} = {display_answer})")
             else:
                 st.session_state['wrong_answers'].append(current_codon)
-                # 오답일 때는 대표 이름과 약자를 알려줌
                 correct_name = valid_answers[0]
-                # 약자가 있으면 같이 표시 (종결 코돈 등은 약자가 없을 수 있음)
                 correct_abbr = valid_answers[1] if len(valid_answers) > 1 and len(valid_answers[1]) == 1 else ""
-                
                 error_msg = f"❌ 땡! (정답: {correct_name}"
                 if correct_abbr:
                     error_msg += f" / {correct_abbr})"
                 else:
                     error_msg += ")"
-                
                 st.session_state['feedback'] = (False, error_msg)
             
-            # 현재 문제 비우기 (다음 턴에 새 문제)
+            # 현재 문제 비우기
             st.session_state['current_q'] = None
-            st.rerun()
+            
+            # 🔥 [핵심 수정 2] 여기서 st.rerun()을 제거했습니다.
+            # 폼 제출이 끝나면 Streamlit이 알아서 부드럽게 화면을 갱신합니다.
+            # 강제 새로고침(rerun)이 깜빡임의 주범이었습니다.
 
-    # 표 확인 (커닝 페이퍼)
+    # 🔥 [핵심 수정 3] 코돈표 전체 보기 (이미지로 교체)
     with st.expander("코돈표 전체 보기 (Reference)"):
-        st.write(CODON_DICT)
+        # 표준 코돈표 이미지 주소 (위키미디어 공용 이미지 사용)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Genetic_Code_Table.svg/1024px-Genetic_Code_Table.svg.png", 
+                 caption="표준 유전부호 표")
 
 if __name__ == "__main__":
     main()
