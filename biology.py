@@ -10,7 +10,7 @@ import pytz
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1u09CnLBLV8Ny5v0TDaXC7KBDRRx4tmMrh5o6cHR7vQI/edit?gid=0#gid=0"
 # ==========================================
 
-# 🧬 코돈 데이터 (정답 리스트 업데이트 완료)
+# 🧬 코돈 데이터 (정답 리스트: AUG 개시/시작 등 모두 포함)
 CODON_DICT = {
     # 1. U 시작
     "UUU": ["페닐알라닌", "F"], "UUC": ["페닐알라닌", "F"],
@@ -39,7 +39,7 @@ CODON_DICT = {
     # 3. A 시작
     "AUU": ["아이소류신", "I"], "AUC": ["아이소류신", "I"], "AUA": ["아이소류신", "I"],
     
-    # 👇 [수정됨] AUG 정답 목록 대폭 추가 (개시, 개시 코돈 등)
+    # AUG 정답 목록 (개시, 개시 코돈 등 포함)
     "AUG": ["메싸이오닌", "M", "시작", "시작코돈", "시작 코돈", "개시", "개시코돈", "개시 코돈"],
     
     "ACU": ["트레오닌", "T"], "ACC": ["트레오닌", "T"], "ACA": ["트레오닌", "T"], "ACG": ["트레오닌", "T"],
@@ -99,7 +99,7 @@ def retry_wrong_answers():
     st.session_state['total_count'] = len(st.session_state['quiz_queue']) + 1 # 현재 문제 포함
     st.session_state['mode'] = "🔥 오답 복습 모드"
 
-# 👇 [핵심] 채점 함수 (버튼 누르자마자 실행됨)
+# 채점 함수 (콜백)
 def check_answer_callback():
     # 1. 사용자 입력값 가져오기
     user_input = st.session_state.get("user_input_key", "")
@@ -214,16 +214,8 @@ def main():
 
     # 입력 폼
     with st.form("quiz_form", clear_on_submit=True):
-        # key를 지정해서 콜백 함수에서 값을 읽음
         st.text_input("정답 입력", placeholder="예: 트레오닌, T, *", key="user_input_key")
-        
-        # 버튼 누르면 -> check_answer_callback 실행 -> 그 후 화면 갱신
         st.form_submit_button("제출", on_click=check_answer_callback)
-
-    # 코돈표 이미지 보기
-    with st.expander("코돈표 전체 보기 (Reference)"):
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Genetic_Code_Table.svg/1024px-Genetic_Code_Table.svg.png", 
-                 caption="표준 유전부호 표")
 
 if __name__ == "__main__":
     main()
