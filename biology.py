@@ -5,12 +5,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import pytz
 
-# ==========================================
-# 👇 [중요] 본인의 구글 엑셀 주소를 꼭 다시 넣어주세요!
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1u09CnLBLV8Ny5v0TDaXC7KBDRRx4tmMrh5o6cHR7vQI/edit?gid=0#gid=0"
-# ==========================================
 
-# 🧬 코돈 데이터 (정답 리스트: AUG 개시/시작 등 모두 포함)
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1u09CnLBLV8Ny5v0TDaXC7KBDRRx4tmMrh5o6cHR7vQI/edit?gid=0#gid=0"
+
 CODON_DICT = {
     # 1. U 시작
     "UUU": ["페닐알라닌", "F"], "UUC": ["페닐알라닌", "F"],
@@ -56,7 +53,7 @@ CODON_DICT = {
     "GGU": ["글리신", "G"], "GGC": ["글리신", "G"], "GGA": ["글리신", "G"], "GGG": ["글리신", "G"]
 }
 
-# [보안] 구글 시트 연결
+
 @st.cache_resource
 def init_connection():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -142,14 +139,14 @@ def check_answer_callback():
             error_msg += ")"
         st.session_state['feedback'] = (False, error_msg)
 
-    # 5. 다음 문제 바로 뽑기 (화면 그려지기 전에!)
+    # 5. 다음 문제 바로 뽑기 
     if st.session_state['quiz_queue']:
         st.session_state['current_q'] = st.session_state['quiz_queue'].pop()
     else:
         st.session_state['current_q'] = None # 문제 끝남
 
 def main():
-    # CSS: 관리자 버튼 숨김 + 모바일 레이아웃 최적화
+   
     st.markdown("""
         <style>
         [data-testid="stStatusWidget"] {visibility: hidden !important;}
