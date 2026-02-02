@@ -7,7 +7,7 @@ import pytz # 한국 시간 기록용 라이브러리
 
 # ==========================================
 # 👇 [중요] 본인의 구글 엑셀 주소를 꼭 다시 넣어주세요!
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1-cEY9b7QWvQNGm_XlY-1fQNV9pI6J1aR0hCAf_8ur-k/edit?gid=0#gid=0"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1u09CnLBLV8Ny5v0TDaXC7KBDRRx4tmMrh5o6cHR7vQI/edit?gid=0#gid=0"
 # ==========================================
 
 # 🧬 코돈 데이터 (정답 리스트 업데이트 완료)
